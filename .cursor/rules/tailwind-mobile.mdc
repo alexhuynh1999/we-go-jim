@@ -1,0 +1,53 @@
+---
+description: Tailwind CSS mobile-first styling rules
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Tailwind Mobile-First Styling
+
+## Mobile-First Approach
+
+- Design for 375px base width FIRST, then scale up with responsive prefixes.
+- Base styles (no prefix) = mobile. Add `sm:`, `md:`, `lg:` for larger screens.
+
+```tsx
+// GOOD - mobile-first
+<div className="px-4 py-2 sm:px-6 md:px-8 lg:px-12">
+
+// BAD - desktop-first, hiding on mobile
+<div className="hidden md:block">
+```
+
+## No Inline Styles
+
+- Use Tailwind utility classes exclusively.
+- Do NOT use `style={{ }}` props.
+- For dynamic values (e.g., timer progress), use CSS custom properties set via `style` only as a last resort and document why.
+
+## Touch Targets
+
+- All interactive elements must have a minimum touch target of 44x44px.
+- Use `min-h-11 min-w-11` (44px) on buttons and tappable areas.
+- Add adequate spacing between adjacent tap targets.
+
+```tsx
+// GOOD - accessible touch target
+<button className="min-h-11 min-w-11 px-4 py-3 text-base">
+
+// BAD - too small for fingers
+<button className="px-1 py-0.5 text-xs">
+```
+
+## Spacing and Layout
+
+- Use `flex` and `grid` for layouts, not floats or positioning hacks.
+- Use consistent spacing scale: `gap-2`, `gap-3`, `gap-4` for component gaps.
+- Add `safe-area-inset` padding on bottom for devices with home indicators:
+  `pb-safe` or `pb-[env(safe-area-inset-bottom)]`.
+
+## Typography
+
+- Base font size is `text-base` (16px) for readability on mobile.
+- Do not go below `text-sm` (14px) for any user-facing text.
+- Use `font-medium` or `font-semibold` for emphasis, not color alone.

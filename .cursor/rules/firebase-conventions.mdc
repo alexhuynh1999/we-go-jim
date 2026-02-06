@@ -1,0 +1,55 @@
+---
+description: Firebase and Firestore data access conventions
+globs: "src/services/firebase/**/*.ts"
+alwaysApply: false
+---
+
+# Firebase Conventions
+
+## Service Layer Isolation
+
+- All Firebase SDK calls are in `src/services/firebase/`.
+- Components NEVER import from `firebase/*` directly. They use service functions.
+
+```tsx
+// GOOD - component uses service
+import { saveWorkout } from '@/services/firebase/workouts';
+const handleFinish = () => saveWorkout(uid, workoutData);
+
+// BAD - component calls Firestore directly
+import { addDoc, collection } from 'firebase/firestore';
+```
+
+## Firestore Path Structure
+
+All user data is scoped under `users/{uid}/`:
+
+```
+users/{uid}/templates/{templateId}
+users/{uid}/workouts/{workoutId}
+```
+
+Always pass `uid` as the first argument to service functions:
+
+```ts
+export const getWorkouts = async (uid: string): Promise<Workout[]> => { ... };
+export const saveWorkout = async (uid: string, workout: WorkoutData): Promise<string> => { ... };
+```
+
+## Timestamps
+
+- Use `serverTimestamp()` for `createdAt` fields on new documents.
+- Use `Timestamp.now()` for client-side timestamps like `startedAt`.
+- Always store dates as Firestore `Timestamp`, never as strings or JS `Date`.
+
+## Error Handling
+
+- Wrap all Firestore calls in try/catch.
+- Service functions should throw typed errors, not swallow them.
+- Let the calling component decide how to display errors to the user.
+
+## Queries
+
+- Always scope queries to a user's subcollection (`users/{uid}/workouts`).
+- Use `orderBy` and `limit` to avoid unbounded reads.
+- Prefer `getDocs` for one-time reads; use `onSnapshot` only when real-time updates are needed.

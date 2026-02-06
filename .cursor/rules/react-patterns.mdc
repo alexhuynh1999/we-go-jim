@@ -1,0 +1,66 @@
+---
+description: React component and hook conventions for We Go Jim
+globs: "**/*.{tsx,ts}"
+alwaysApply: false
+---
+
+# React Patterns
+
+## Components
+
+- Functional components only. No class components.
+- Use named exports, not default exports.
+- One component per file. File name matches component name in PascalCase.
+
+```tsx
+// GOOD
+export const ExerciseCard = ({ exercise }: ExerciseCardProps) => {
+  return <div>...</div>;
+};
+
+// BAD - default export
+export default function ExerciseCard() { ... }
+
+// BAD - class component
+class ExerciseCard extends React.Component { ... }
+```
+
+## Hooks
+
+- Custom hooks live in `src/hooks/` and are prefixed with `use`.
+- Extract reusable logic into custom hooks rather than duplicating in components.
+- Keep hooks focused on a single concern.
+
+```tsx
+// GOOD - focused hook
+export const useRestTimer = (initialSeconds: number) => {
+  const [seconds, setSeconds] = useState(initialSeconds);
+  // ...timer logic
+  return { seconds, start, pause, reset };
+};
+```
+
+## Component Organization
+
+- Components are organized by feature folder inside `src/components/`.
+- Colocate component-specific types in a sibling `*.types.ts` file.
+- Shared types go in `src/types/`.
+
+```
+src/components/workout/
+  ActiveWorkout.tsx
+  ActiveWorkout.types.ts
+  ExerciseCard.tsx
+  SetRow.tsx
+```
+
+## State Management
+
+- Use React Context + `useReducer` for complex shared state (e.g., active workout).
+- Use `useState` for simple local state.
+- Avoid prop drilling more than 2 levels deep -- lift to context instead.
+
+## Event Handlers
+
+- Prefix event handler props with `on` (e.g., `onComplete`, `onSetChange`).
+- Prefix handler implementations with `handle` (e.g., `handleComplete`, `handleSetChange`).
