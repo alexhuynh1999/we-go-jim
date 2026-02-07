@@ -117,6 +117,7 @@ const AppRoutes = () => {
               <TemplateEditorRoute
                 onSave={handleCreateTemplate}
                 onCancel={() => navigate('/templates')}
+                uid={user?.uid}
               />
             }
           />
@@ -127,6 +128,7 @@ const AppRoutes = () => {
                 templates={templates}
                 onUpdate={handleUpdateTemplate}
                 onCancel={() => navigate('/templates')}
+                uid={user?.uid}
               />
             }
           />

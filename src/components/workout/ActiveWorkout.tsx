@@ -4,7 +4,7 @@ import { useWorkout } from '@/hooks/useWorkout';
 import { usePreviousWorkout } from '@/hooks/usePreviousWorkout';
 import { saveWorkout } from '@/services/firebase/workouts';
 import { ExerciseCard } from './ExerciseCard';
-import { AddExerciseModal } from './AddExerciseModal';
+import { ExerciseSearchModal } from './ExerciseSearchModal';
 import { RestTimerWidget } from './RestTimerWidget';
 import type { ExerciseType, WorkoutExercise, WorkoutSet } from '@/types/workout';
 import { Timestamp } from 'firebase/firestore';
@@ -182,10 +182,11 @@ export const ActiveWorkout = ({ uid, onWorkoutSaved }: ActiveWorkoutProps) => {
       <RestTimerWidget />
 
       {/* Add Exercise Modal */}
-      <AddExerciseModal
+      <ExerciseSearchModal
         open={showAddExercise}
         onClose={() => setShowAddExercise(false)}
-        onAdd={handleAddExercise}
+        onSelect={handleAddExercise}
+        uid={uid}
       />
 
       {/* Cancel Confirmation */}

@@ -7,6 +7,7 @@ interface NewTemplateProps {
   onSave: (data: TemplateData) => Promise<void>;
   onUpdate?: undefined;
   onCancel: () => void;
+  uid?: string;
 }
 
 interface EditTemplateProps {
@@ -14,6 +15,7 @@ interface EditTemplateProps {
   onSave?: undefined;
   onUpdate: (id: string, data: TemplateData) => Promise<void>;
   onCancel: () => void;
+  uid?: string;
 }
 
 type TemplateEditorRouteProps = NewTemplateProps | EditTemplateProps;
@@ -30,6 +32,7 @@ export const TemplateEditorRoute = (props: TemplateEditorRouteProps) => {
           await props.onUpdate(id, data);
         }}
         onCancel={props.onCancel}
+        uid={props.uid}
       />
     );
   }
@@ -40,6 +43,7 @@ export const TemplateEditorRoute = (props: TemplateEditorRouteProps) => {
         await props.onSave!(data);
       }}
       onCancel={props.onCancel}
+      uid={props.uid}
     />
   );
 };

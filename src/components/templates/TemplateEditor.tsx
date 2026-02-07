@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Timestamp } from 'firebase/firestore';
-import { EXERCISE_TYPES, type ExerciseType } from '@/types/workout';
+import type { ExerciseType } from '@/types/workout';
 import type { TemplateExercise, Template, TemplateData } from '@/types/template';
+import { ExerciseSearchModal } from '../workout/ExerciseSearchModal';
 
 const TYPE_LABELS: Record<ExerciseType, string> = {
   barbell: 'Barbell',
@@ -14,12 +15,14 @@ interface TemplateEditorProps {
   template?: Template;
   onSave: (data: TemplateData) => Promise<void>;
   onCancel: () => void;
+  uid?: string;
 }
 
 export const TemplateEditor = ({
   template,
   onSave,
   onCancel,
+  uid,
 }: TemplateEditorProps) => {
   const [name, setName] = useState(template?.name ?? '');
   const [exercises, setExercises] = useState<TemplateExercise[]>(
@@ -32,6 +35,7 @@ export const TemplateEditor = ({
   const [newType, setNewType] = useState<ExerciseType>('barbell');
   const [newSets, setNewSets] = useState(3);
   const [newReps, setNewReps] = useState(10);
+  const [showExerciseSearch, setShowExerciseSearch] = useState(false);
 
   const addExercise = () => {
     const trimmed = newName.trim();
@@ -183,32 +187,36 @@ export const TemplateEditor = ({
             Add Exercise
           </h3>
 
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Exercise name"
-            className="mb-3 w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-base text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') addExercise();
-            }}
-          />
-
-          <div className="mb-3 grid grid-cols-2 gap-2">
-            {EXERCISE_TYPES.map((t) => (
-              <button
-                key={t}
-                onClick={() => setNewType(t)}
-                className={`min-h-10 rounded-lg px-2 py-2 text-xs font-medium transition-all ${
-                  newType === t
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-800 text-slate-400 active:bg-slate-700'
-                }`}
-              >
-                {TYPE_LABELS[t]}
-              </button>
-            ))}
-          </div>
+          {/* Tappable exercise search field */}
+          <button
+            type="button"
+            onClick={() => setShowExerciseSearch(true)}
+            className="mb-3 flex w-full items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-left transition-all active:border-indigo-500"
+          >
+            <svg
+              className="h-4 w-4 shrink-0 text-slate-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+              />
+            </svg>
+            {newName ? (
+              <span className="flex-1 text-base text-white">{newName}</span>
+            ) : (
+              <span className="flex-1 text-base text-slate-600">Search for an exercise...</span>
+            )}
+            {newName && (
+              <span className="shrink-0 rounded-lg bg-slate-700 px-2 py-0.5 text-xs font-medium text-slate-300">
+                {TYPE_LABELS[newType]}
+              </span>
+            )}
+          </button>
 
           <div className="mb-3 flex gap-3">
             <div className="flex-1">
@@ -247,6 +255,18 @@ export const TemplateEditor = ({
           </button>
         </div>
       </div>
+
+      {/* Exercise Search Modal */}
+      <ExerciseSearchModal
+        open={showExerciseSearch}
+        onClose={() => setShowExerciseSearch(false)}
+        onSelect={(selectedName, selectedType) => {
+          setNewName(selectedName);
+          setNewType(selectedType);
+          setShowExerciseSearch(false);
+        }}
+        uid={uid}
+      />
     </div>
   );
 };
