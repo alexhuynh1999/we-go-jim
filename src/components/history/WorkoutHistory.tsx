@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Workout } from '@/types/workout';
 import { formatDuration } from '@/utils/formatDuration';
 import { WorkoutDetail } from './WorkoutDetail';
@@ -37,14 +37,19 @@ export const WorkoutHistory = ({
   initialWorkoutId,
 }: WorkoutHistoryProps) => {
   const [selected, setSelected] = useState<Workout | null>(null);
+  const deepLinkConsumed = useRef(false);
 
-  // Auto-select workout when deep-linked via initialWorkoutId
+  // Auto-select workout when deep-linked via initialWorkoutId (runs once)
   useEffect(() => {
-    if (initialWorkoutId && workouts.length > 0 && !selected) {
+    if (deepLinkConsumed.current) return;
+    if (initialWorkoutId && workouts.length > 0) {
       const match = workouts.find((w) => w.id === initialWorkoutId);
-      if (match) setSelected(match);
+      if (match) {
+        deepLinkConsumed.current = true;
+        setSelected(match);
+      }
     }
-  }, [initialWorkoutId, workouts, selected]);
+  }, [initialWorkoutId, workouts]);
 
   if (selected) {
     return (
