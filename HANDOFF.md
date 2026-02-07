@@ -6,7 +6,7 @@ A mobile-first PWA workout tracker built with React, Firebase, and Tailwind CSS.
 
 ## Current State
 
-**All 6 implementation phases are complete.** The app builds, type-checks, and runs in dev mode. No tests have been written yet (Phase 6 deferred testing).
+**All 6 implementation phases are complete, plus a round of UX polish and mobile improvements.** The app builds, type-checks, and runs in dev mode. No tests have been written yet (Phase 6 deferred testing).
 
 ### What's Been Built
 
@@ -22,43 +22,52 @@ A mobile-first PWA workout tracker built with React, Firebase, and Tailwind CSS.
 | Active workout (add exercises, log sets, save) | Done | `src/components/workout/ActiveWorkout.tsx`, `ExerciseCard.tsx`, `SetRow.tsx` |
 | Workout templates (CRUD, start-from-template) | Done | `src/components/templates/TemplateList.tsx`, `TemplateEditor.tsx`, `TemplateEditorRoute.tsx` |
 | Previous workout tracking (dimmed placeholders) | Done | `src/hooks/usePreviousWorkout.ts` (wired into `SetRow`) |
-| Rest timer (global context, floating widget) | Done | `src/hooks/useRestTimer.ts`, `src/contexts/RestTimerContext.tsx`, `src/components/workout/RestTimerWidget.tsx` |
+| Rest timer (global context, centered widget) | Done | `src/hooks/useRestTimer.ts`, `src/contexts/RestTimerContext.tsx`, `src/components/workout/RestTimerWidget.tsx` |
 | Workout history (date-grouped list + detail view) | Done | `src/components/history/WorkoutHistory.tsx`, `WorkoutDetail.tsx` |
 | Exercise search (API Ninjas + custom exercises) | Done | `src/services/exerciseApi.ts`, `src/hooks/useExerciseSearch.ts`, `src/components/workout/ExerciseSearchModal.tsx` |
 | Custom exercises (Firestore, cross-device sync) | Done | `src/services/firebase/customExercises.ts`, `src/hooks/useCustomExercises.ts` |
-| PWA manifest + service worker | Done | `vite.config.ts` (VitePWA plugin), SVG icons in `public/icons/` |
-| GitHub Pages deploy config | Done | `base: '/we-go-jim/'` in vite config, `gh-pages` package |
+| PWA manifest + service worker | Done | `vite.config.ts` (VitePWA plugin), PNG + SVG icons in `public/icons/` |
+| GitHub Pages deploy config + CI/CD | Done | `.github/workflows/deploy.yml`, `base: '/we-go-jim/'` in vite config |
 
-### Exercise Search Integration (Added This Session)
+### UX Polish (Added This Session)
 
-The "Add Exercise" flow in both **ActiveWorkout** and **TemplateEditor** was replaced with an API-powered search modal:
+All features from `features.md` were implemented:
 
-- **`ExerciseSearchModal`** opens when the user taps "Add Exercise". It shows a search input, queries the API Ninjas Exercises API (debounced, cached), and displays results with auto-inferred equipment types.
-- **"+ Add custom exercise"** at the bottom of the modal opens the original `AddExerciseModal` as a fallback for manual entry.
-- **Custom exercises are persisted in Firestore** at `users/{uid}/customExercises` and sync across devices. They appear first in search results, deduplicated against API results.
-- **Error handling**: API errors (e.g., free-tier endpoint downtime) are surfaced as amber-colored messages in the modal with a hint to use the manual fallback.
-- **Graceful degradation**: Works without an API key (shows only custom exercises) and without Firebase (shows only API results).
+1. **Safe-area top spacing**: `pt-[env(safe-area-inset-top)]` on App.tsx wrapper; sticky headers in ActiveWorkout and TemplateEditor use `top-[env(safe-area-inset-top)]` so they don't overlap the iPhone notch/Dynamic Island. BottomNav already handled bottom inset.
 
-Data flow:
+2. **Live workout timer**: The ActiveWorkout header shows a live `MM:SS` / `H:MM:SS` counter. If the workout exceeds 3 hours, the timer turns amber and a "Still Working Out?" prompt appears (once).
 
-```
-ExerciseSearchModal
-  ├── useExerciseSearch(query)       → debounced API Ninjas search (exerciseApi.ts)
-  ├── useCustomExercises(uid)        → Firestore custom exercises (customExercises.ts)
-  └── useMemo                        → merges custom (first) + API results, deduplicates
-```
+3. **Duration tags in history**: Workout cards in both WorkoutHistory and Dashboard show a clock icon + formatted duration (e.g., "1h 30m"). Shared helper at `src/utils/formatDuration.ts`.
 
-`uid` is threaded through: `App.tsx` → `ActiveWorkout` (already had it) and `App.tsx` → `TemplateEditorRoute` → `TemplateEditor`.
+4. **Pinch-to-zoom disabled**: Viewport meta tag updated with `maximum-scale=1.0, user-scalable=no`.
 
-### Bugs Fixed During Previous Session
+5. **Set autofill (dimmed suggestions)**: When adding a new set, the previous set in the same exercise provides dimmed placeholder values (same pattern as previous-workout suggestions). Computed in `ExerciseCard` -- the previous set in the current exercise takes priority, falling back to the previous workout's matching set. Ready for a future progression algorithm.
 
-1. **Firebase crash on missing `.env`**: `initializeApp()` threw when env vars were undefined. Fixed with `isFirebaseConfigured` guard in `src/services/firebase/config.ts` -- Firebase init is skipped gracefully, and the login page shows an error message.
+6. **Centered rest timer**: Floating button moved from bottom-right to bottom-center (`left-1/2 -translate-x-1/2`).
 
-2. **`user!.uid` crash in App.tsx**: JSX prop expressions are evaluated eagerly by React, even inside AuthGuard children that won't render when `user` is null. Fixed by wrapping user-dependent Route elements in `user ? <Component /> : null`.
+7. **Custom timer sound**: `useRestTimer.ts` plays `public/sounds/timer-done.mp3` using `import.meta.env.BASE_URL`. Falls back to the original 880Hz oscillator beep if the file is missing or audio is blocked.
+
+8. **PNG app icons**: PWA manifest updated to reference both PNG and SVG icons. `<link rel="apple-touch-icon">` added to `index.html`. User-provided PNGs are at `public/icons/icon-192x192.png` and `icon-512x512.png`.
+
+9. **Exercise name formatting**: `formatExerciseName()` in `exerciseApi.ts` title-cases every word and strips punctuation (except dashes). Applied to API Ninjas results before caching.
+
+10. **Finish workout confirmation**: A modal appears when tapping "Finish" showing exercise count, completed sets, and elapsed time. User can "Keep Going" or confirm "Finish".
+
+11. **Recent workout deep-link**: Clicking a recent workout on the Dashboard navigates to `/history/:id`, which auto-selects that workout in WorkoutHistory via `initialWorkoutId` prop. A `deepLinkConsumed` ref prevents the back button from re-selecting.
+
+12. **Version indicator**: `__APP_VERSION__` injected via Vite `define` from `package.json`. Displayed discreetly below the "Sign out" button on the Dashboard.
+
+### Bugs Fixed During Previous Sessions
+
+1. **Firebase crash on missing `.env`**: `initializeApp()` threw when env vars were undefined. Fixed with `isFirebaseConfigured` guard in `src/services/firebase/config.ts`.
+
+2. **`user!.uid` crash in App.tsx**: JSX props evaluated eagerly even inside AuthGuard. Fixed with `user ? <Component /> : null`.
+
+3. **Exercise search showing no results**: API Ninjas returning 400 was silently swallowed. Fixed by surfacing `SearchResult.error` through to the UI.
 
 ### Bugs Fixed This Session
 
-3. **Exercise search showing no results**: The API Ninjas `/v1/exercises` endpoint was returning HTTP 400 (`"This endpoint is currently down for free users"`), but `searchExercises` silently returned `[]`. Fixed by parsing the error response body and surfacing it through `SearchResult.error` → `useExerciseSearch.error` → `ExerciseSearchModal` UI.
+4. **Deep-link back button loop**: Pressing "Back" in WorkoutDetail after navigating from Dashboard caused an infinite re-selection loop. The `useEffect` watching `initialWorkoutId` re-fired when `selected` was cleared because `selected` was in the dependency array. Fixed with a `deepLinkConsumed` ref that prevents the effect from running more than once.
 
 ## How to Run
 
@@ -89,13 +98,14 @@ src/
   App.tsx                     # Main router, connects all hooks to pages
   main.tsx                    # Entry point, HashRouter + RestTimerProvider
   index.css                   # Tailwind v4 imports + dark theme base styles
+  vite-env.d.ts               # Type declarations (ImportMetaEnv, __APP_VERSION__)
   components/
     auth/                     # LoginPage, AuthGuard
-    dashboard/                # Dashboard (recent workouts, quick start)
+    dashboard/                # Dashboard (recent workouts, quick start, version indicator)
     workout/                  # ActiveWorkout, ExerciseCard, SetRow, AddExerciseModal,
                               # ExerciseSearchModal, RestTimerWidget
     templates/                # TemplateList, TemplateEditor, TemplateEditorRoute
-    history/                  # WorkoutHistory, WorkoutDetail
+    history/                  # WorkoutHistory (supports deep-link via initialWorkoutId), WorkoutDetail
     ui/                       # BottomNav
   hooks/
     useAuth.ts                # Firebase auth state
@@ -103,38 +113,47 @@ src/
     useWorkouts.ts            # Fetch/delete workout history from Firestore
     useTemplates.ts           # CRUD templates from Firestore
     usePreviousWorkout.ts     # Query previous sets for an exercise
-    useRestTimer.ts           # Timer logic (start/pause/resume/reset)
+    useRestTimer.ts           # Timer logic (start/pause/resume/reset, custom sound file)
     useExerciseSearch.ts      # Debounced API Ninjas search (300ms, AbortController)
     useCustomExercises.ts     # Load/add custom exercises from Firestore
   contexts/
     RestTimerContext.tsx       # Global rest timer state (persists across workout screens)
   services/
-    exerciseApi.ts             # API Ninjas client, in-memory cache, type inference
+    exerciseApi.ts             # API Ninjas client, in-memory cache, type inference, name formatting
     firebase/
       config.ts               # Firebase app init (graceful when unconfigured)
       auth.ts                 # Google sign-in, sign-out, onAuthChange
       workouts.ts             # Firestore CRUD for workouts
       templates.ts            # Firestore CRUD for templates
       customExercises.ts      # Firestore CRUD for user custom exercises
+  utils/
+    formatDuration.ts          # Shared helper: format Timestamp pair as "1h 30m"
   types/
     workout.ts                # Workout, WorkoutExercise, WorkoutSet, ExerciseType
     template.ts               # Template, TemplateExercise
+public/
+  icons/                      # PWA icons (192x192 + 512x512, both PNG and SVG)
+  sounds/
+    timer-done.mp3            # Custom rest timer completion sound
 ```
 
 ## Key Architecture Decisions
 
 - **Firebase config is nullable**: `app`, `auth`, `db` exports from `config.ts` can be `null`. All service functions guard against this. The `isFirebaseConfigured` boolean is exported for UI messaging.
-- **Workout state is local**: `useWorkout` uses `useReducer` -- workout data only hits Firestore when "Finish" is tapped. This avoids partial writes.
+- **Workout state is local**: `useWorkout` uses `useReducer` -- workout data only hits Firestore when "Finish" is tapped (with confirmation modal). This avoids partial writes.
 - **Route elements use conditional rendering**: `user ? <Component /> : null` instead of `user!` non-null assertions, because React evaluates JSX props eagerly even for guarded children.
 - **Rest timer is in React Context**: Wraps the entire app so the timer persists when navigating between exercises during an active workout.
 - **No default exports**: All components/hooks use named exports per project convention.
-- **Exercise search merges two sources**: API Ninjas results (cached in-memory) and Firestore custom exercises (loaded once per session). Custom exercises appear first and deduplicate API results by name. The `ExerciseSearchModal` owns the merge via `useMemo`.
-- **`searchExercises` returns `SearchResult`**: `{ exercises, error? }` -- not a bare array. This allows API error messages to be surfaced in the UI.
-- **Equipment type inference**: `inferExerciseType()` maps the API's `equipments` array to the app's `ExerciseType` (`barbell`/`dumbbell`/`bodyweight`/`machine`).
+- **Exercise search merges two sources**: API Ninjas results (cached in-memory, names title-cased via `formatExerciseName`) and Firestore custom exercises (loaded once per session). Custom exercises appear first and deduplicate API results by name.
+- **Set suggestion priority**: When adding a new set, the placeholder suggestion comes from (1) the previous set in the same exercise (current workout), then falls back to (2) the matching set from the last completed workout. Computed in `ExerciseCard`, passed to `SetRow` as `previousSet`.
+- **Deep-link with consumed ref**: `/history/:id` auto-selects a workout in WorkoutHistory. A `deepLinkConsumed` ref prevents the useEffect from re-selecting after the user presses "Back".
+- **Version injection**: `__APP_VERSION__` is defined in `vite.config.ts` via `process.env.npm_package_version` and typed in `vite-env.d.ts`.
+- **Safe-area handling**: App.tsx wrapper has `pt-[env(safe-area-inset-top)]`; sticky headers use `top-[env(safe-area-inset-top)]`; BottomNav uses `pb-[env(safe-area-inset-bottom)]`.
 
 ## Known Issues
 
 - **API Ninjas free tier is currently down**: The `/v1/exercises` endpoint returns 400 for free-tier API keys. The app handles this gracefully (shows the error + manual fallback). When the endpoint comes back, search will work automatically (no code changes needed).
+- **Mobile testing limited**: Safe-area and layout changes have been tested in Chrome DevTools device emulation but not on actual mobile hardware. Real-device testing on an iPhone is recommended.
 
 ## Deploying to GitHub Pages
 
@@ -296,14 +315,16 @@ Same as Option A -- add `<your-github-username>.github.io` to Firebase's authori
 ## What's Left To Do
 
 - [ ] **Testing**: Vitest + React Testing Library (planned in Phase 6, not started)
-- [ ] **PWA icons**: Currently SVG placeholders in `public/icons/` -- replace with proper PNG icons
 - [ ] **Offline support verification**: Service worker is configured but not tested offline
-- [ ] **Mobile device testing**: Not tested on actual mobile hardware
+- [ ] **Real mobile device testing**: Safe-area, layout, and touch interactions need testing on actual iPhone hardware
 - [ ] **Error boundaries**: No React error boundary wrapping the app
 - [ ] **Weight unit toggle**: Currently hardcoded to lbs
-- [ ] **Workout duration display**: ActiveWorkout has `startedAt` but no live duration counter
+- [ ] **Progression algorithm**: Set suggestions currently copy the previous set; infrastructure is ready for a smarter algorithm
 - [x] **Deploy to GitHub Pages**: See deployment instructions above
+- [x] **PWA icons**: PNG icons added at `public/icons/`
+- [x] **Workout duration display**: Live timer in ActiveWorkout header + duration tags in history
+- [x] **All `features.md` items**: Safe-area, timer, zoom, autofill, centered rest timer, sound, icons, name formatting, finish confirmation, deep-link, version indicator
 
 ## Git Status
 
-No commits yet. All files are untracked. Ready for an initial commit.
+All changes committed and pushed to `origin/main`. Working tree is clean.

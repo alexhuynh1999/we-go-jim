@@ -33,10 +33,10 @@ const createEmptySet = (): WorkoutSet => ({
   completed: false,
 });
 
-const initialState: WorkoutState = {
+const createInitialState = (): WorkoutState => ({
   exercises: [],
   startedAt: Timestamp.now(),
-};
+});
 
 const workoutReducer = (
   state: WorkoutState,
@@ -119,7 +119,7 @@ const workoutReducer = (
       };
 
     case 'RESET':
-      return { ...initialState, startedAt: Timestamp.now() };
+      return createInitialState();
 
     default:
       return state;
@@ -127,7 +127,7 @@ const workoutReducer = (
 };
 
 export const useWorkout = () => {
-  const [state, dispatch] = useReducer(workoutReducer, initialState);
+  const [state, dispatch] = useReducer(workoutReducer, undefined, createInitialState);
 
   const addExercise = useCallback(
     (name: string, exerciseType: ExerciseType) => {
