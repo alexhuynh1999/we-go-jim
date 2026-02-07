@@ -78,9 +78,9 @@ export const TemplateEditor = ({
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-950">
+    <div className="flex flex-1 flex-col bg-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/95 px-4 py-3 backdrop-blur-sm">
+      <header className="sticky top-[env(safe-area-inset-top)] z-30 border-b border-slate-800 bg-slate-950/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <button
             onClick={onCancel}

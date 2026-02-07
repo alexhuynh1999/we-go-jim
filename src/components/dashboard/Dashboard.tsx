@@ -2,6 +2,7 @@ import type { User } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import type { Workout } from '@/types/workout';
+import { formatDuration } from '@/utils/formatDuration';
 
 const TYPE_COLORS: Record<string, string> = {
   barbell: 'text-indigo-400',
@@ -35,12 +36,17 @@ export const Dashboard = ({
             {user.displayName?.split(' ')[0] ?? 'Athlete'}
           </h1>
         </div>
-        <button
-          onClick={onLogout}
-          className="rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:text-white"
-        >
-          Sign out
-        </button>
+        <div className="flex flex-col items-end gap-0.5">
+          <button
+            onClick={onLogout}
+            className="rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:text-white"
+          >
+            Sign out
+          </button>
+          <span className="pr-3 text-[10px] text-slate-600">
+            v{__APP_VERSION__}
+          </span>
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -122,16 +128,24 @@ export const Dashboard = ({
               return (
                 <button
                   key={workout.id}
-                  onClick={() => navigate('/history')}
+                  onClick={() => navigate(`/history/${workout.id}`)}
                   className="w-full rounded-2xl border border-slate-800 bg-slate-900 p-4 text-left transition-all active:bg-slate-800"
                 >
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-sm font-medium text-white">
                       {format(workout.completedAt.toDate(), 'EEE, MMM d · h:mm a')}
                     </span>
-                    <span className="text-xs text-slate-500">
-                      {totalSets} sets
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        {formatDuration(workout.startedAt, workout.completedAt)}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {totalSets} sets
+                      </span>
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                     {workout.exercises.map((ex, i) => (

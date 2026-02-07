@@ -23,7 +23,6 @@ export const useRestTimer = (): UseRestTimerReturn => {
   const [totalSeconds, setTotalSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Clean up interval on unmount
   useEffect(() => {
@@ -38,23 +37,30 @@ export const useRestTimer = (): UseRestTimerReturn => {
       navigator.vibrate([200, 100, 200, 100, 200]);
     }
 
-    // Audio chime (generate a simple beep)
+    // Play custom sound file if available, fall back to generated beep
     try {
-      if (!audioRef.current) {
-        const ctx = new AudioContext();
-        const oscillator = ctx.createOscillator();
-        const gain = ctx.createGain();
-        oscillator.connect(gain);
-        gain.connect(ctx.destination);
-        oscillator.frequency.value = 880;
-        oscillator.type = 'sine';
-        gain.gain.value = 0.3;
-        oscillator.start();
-        setTimeout(() => {
-          oscillator.stop();
-          ctx.close();
-        }, 500);
-      }
+      const soundUrl = `${import.meta.env.BASE_URL}sounds/timer-done.mp3`;
+      const audio = new Audio(soundUrl);
+      audio.play().catch(() => {
+        // Custom sound failed (file missing or blocked) -- generate a beep
+        try {
+          const ctx = new AudioContext();
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+          oscillator.connect(gain);
+          gain.connect(ctx.destination);
+          oscillator.frequency.value = 880;
+          oscillator.type = 'sine';
+          gain.gain.value = 0.3;
+          oscillator.start();
+          setTimeout(() => {
+            oscillator.stop();
+            ctx.close();
+          }, 500);
+        } catch {
+          // Audio completely blocked; fail silently
+        }
+      });
     } catch {
       // Audio may be blocked; fail silently
     }

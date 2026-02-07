@@ -10,6 +10,18 @@ export interface ApiExercise {
   safety_info: string;
 }
 
+/**
+ * Title-case every word and strip punctuation (except dashes/hyphens).
+ * Example: "barbell bench press." → "Barbell Bench Press"
+ */
+export const formatExerciseName = (name: string): string =>
+  name
+    .replace(/[^\w\s-]/g, '')   // strip punctuation except dashes
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+
 const API_BASE = 'https://api.api-ninjas.com/v1';
 const apiKey = import.meta.env.VITE_API_NINJAS_KEY as string | undefined;
 
@@ -106,8 +118,12 @@ export const searchExercises = async (
     }
 
     const data: ApiExercise[] = await res.json();
-    cache.set(key, data);
-    return { exercises: data };
+    const cleaned = data.map((ex) => ({
+      ...ex,
+      name: formatExerciseName(ex.name),
+    }));
+    cache.set(key, cleaned);
+    return { exercises: cleaned };
   } catch (err) {
     if ((err as Error).name === 'AbortError') return { exercises: [] };
     console.warn('Exercise API request failed:', err);

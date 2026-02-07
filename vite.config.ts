@@ -23,6 +23,16 @@ export default defineConfig({
         start_url: '/we-go-jim/',
         icons: [
           {
+            src: 'icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
             src: 'icons/icon-192x192.svg',
             sizes: '192x192',
             type: 'image/svg+xml',
@@ -36,6 +46,9 @@ export default defineConfig({
       },
     }),
   ],
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

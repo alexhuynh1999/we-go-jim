@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Workout } from '@/types/workout';
+import { formatDuration } from '@/utils/formatDuration';
 import { WorkoutDetail } from './WorkoutDetail';
 
 const TYPE_COLORS: Record<string, string> = {
@@ -14,6 +15,8 @@ interface WorkoutHistoryProps {
   workouts: Workout[];
   loading: boolean;
   onDelete: (id: string) => void;
+  /** When set, auto-selects this workout on mount (deep-link from Dashboard). */
+  initialWorkoutId?: string;
 }
 
 /** Group workouts by date string */
@@ -31,8 +34,17 @@ export const WorkoutHistory = ({
   workouts,
   loading,
   onDelete,
+  initialWorkoutId,
 }: WorkoutHistoryProps) => {
   const [selected, setSelected] = useState<Workout | null>(null);
+
+  // Auto-select workout when deep-linked via initialWorkoutId
+  useEffect(() => {
+    if (initialWorkoutId && workouts.length > 0 && !selected) {
+      const match = workouts.find((w) => w.id === initialWorkoutId);
+      if (match) setSelected(match);
+    }
+  }, [initialWorkoutId, workouts, selected]);
 
   if (selected) {
     return (
@@ -97,9 +109,17 @@ export const WorkoutHistory = ({
                         <span className="text-sm font-medium text-white">
                           {format(workout.completedAt.toDate(), 'h:mm a')}
                         </span>
-                        <span className="text-xs text-slate-500">
-                          {totalSets} sets
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            {formatDuration(workout.startedAt, workout.completedAt)}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {totalSets} sets
+                          </span>
+                        </div>
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                         {workout.exercises.map((ex, i) => (

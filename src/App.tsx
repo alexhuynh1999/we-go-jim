@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTemplates } from '@/hooks/useTemplates';
@@ -14,6 +14,16 @@ import type { Template, TemplateData } from '@/types/template';
 import type { WorkoutExercise } from '@/types/workout';
 
 const HIDDEN_NAV_PREFIXES = ['/workout', '/templates/new', '/templates/edit'];
+
+/** Wrapper that extracts the :id param for deep-linking into WorkoutHistory. */
+const WorkoutHistoryWithId = (props: {
+  workouts: import('@/types/workout').Workout[];
+  loading: boolean;
+  onDelete: (id: string) => void;
+}) => {
+  const { id } = useParams<{ id: string }>();
+  return <WorkoutHistory {...props} initialWorkoutId={id} />;
+};
 
 const AppRoutes = () => {
   const { user, loading, error, login, logout } = useAuth();
@@ -75,7 +85,7 @@ const AppRoutes = () => {
 
   return (
     <AuthGuard user={user} loading={loading} error={error} onLogin={login}>
-      <div className="flex min-h-dvh flex-col bg-slate-950">
+      <div className="flex min-h-dvh flex-col bg-slate-950 pt-[env(safe-area-inset-top)]">
         <Routes>
           <Route
             path="/"
@@ -94,6 +104,16 @@ const AppRoutes = () => {
             path="/history"
             element={
               <WorkoutHistory
+                workouts={workouts}
+                loading={workoutsLoading}
+                onDelete={removeWorkout}
+              />
+            }
+          />
+          <Route
+            path="/history/:id"
+            element={
+              <WorkoutHistoryWithId
                 workouts={workouts}
                 loading={workoutsLoading}
                 onDelete={removeWorkout}

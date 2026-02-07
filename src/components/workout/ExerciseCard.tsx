@@ -87,18 +87,28 @@ export const ExerciseCard = ({
 
       {/* Set Rows */}
       <div className="flex flex-col gap-1.5">
-        {exercise.sets.map((set, setIndex) => (
-          <SetRow
-            key={`${exerciseIndex}-${setIndex}`}
-            setIndex={setIndex}
-            set={set}
-            isBodyweight={isBodyweight}
-            previousSet={previousSets?.[setIndex]}
-            onUpdate={(update) => onUpdateSet(setIndex, update)}
-            onToggleComplete={() => onToggleSetComplete(setIndex)}
-            onRemove={() => onRemoveSet(setIndex)}
-          />
-        ))}
+        {exercise.sets.map((set, setIndex) => {
+          // Suggest values from the previous set in the current exercise,
+          // falling back to the matching set from the last workout.
+          const prevInExercise = setIndex > 0 ? exercise.sets[setIndex - 1] : undefined;
+          const suggestion =
+            prevInExercise && (prevInExercise.weight > 0 || prevInExercise.reps > 0)
+              ? prevInExercise
+              : previousSets?.[setIndex];
+
+          return (
+            <SetRow
+              key={`${exerciseIndex}-${setIndex}`}
+              setIndex={setIndex}
+              set={set}
+              isBodyweight={isBodyweight}
+              previousSet={suggestion}
+              onUpdate={(update) => onUpdateSet(setIndex, update)}
+              onToggleComplete={() => onToggleSetComplete(setIndex)}
+              onRemove={() => onRemoveSet(setIndex)}
+            />
+          );
+        })}
       </div>
 
       {/* Add Set Button */}

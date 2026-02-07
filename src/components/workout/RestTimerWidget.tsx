@@ -21,7 +21,7 @@ export const RestTimerWidget = () => {
       {/* Floating Button */}
       <button
         onClick={() => setExpanded(true)}
-        className={`fixed bottom-6 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 ${
+        className={`fixed bottom-6 left-1/2 z-40 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 ${
           hasTimer
             ? 'bg-indigo-600 text-white'
             : 'bg-slate-800 text-slate-400 border border-slate-700'

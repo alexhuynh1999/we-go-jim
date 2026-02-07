@@ -57,6 +57,43 @@ export const ActiveWorkout = ({ uid, onWorkoutSaved }: ActiveWorkoutProps) => {
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [showLongWorkoutWarning, setShowLongWorkoutWarning] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Live elapsed time counter
+  useEffect(() => {
+    const tick = () => {
+      const now = Date.now();
+      const started = startedAt.toDate().getTime();
+      setElapsedSeconds(Math.floor((now - started) / 1000));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+
+  // 3-hour guardrail
+  const longWorkoutThreshold = 3 * 60 * 60; // 3 hours in seconds
+  const longWorkoutWarningShown = useRef(false);
+  useEffect(() => {
+    if (
+      elapsedSeconds >= longWorkoutThreshold &&
+      !longWorkoutWarningShown.current
+    ) {
+      longWorkoutWarningShown.current = true;
+      setShowLongWorkoutWarning(true);
+    }
+  }, [elapsedSeconds, longWorkoutThreshold]);
+
+  const formatElapsed = (totalSec: number): string => {
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const mm = m.toString().padStart(2, '0');
+    const ss = s.toString().padStart(2, '0');
+    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  };
 
   const handleAddExercise = useCallback(
     (name: string, type: ExerciseType) => {
@@ -99,9 +136,9 @@ export const ActiveWorkout = ({ uid, onWorkoutSaved }: ActiveWorkoutProps) => {
   }, [reset, navigate]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-950">
+    <div className="flex flex-1 flex-col bg-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/95 px-4 py-3 backdrop-blur-sm">
+      <header className="sticky top-[env(safe-area-inset-top)] z-30 border-b border-slate-800 bg-slate-950/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <button
             onClick={handleCancel}
@@ -109,9 +146,14 @@ export const ActiveWorkout = ({ uid, onWorkoutSaved }: ActiveWorkoutProps) => {
           >
             Cancel
           </button>
-          <h1 className="text-base font-bold text-white">Workout</h1>
+          <div className="text-center">
+            <p className="text-xs text-slate-500">Workout</p>
+            <p className={`text-base font-bold tabular-nums ${elapsedSeconds >= longWorkoutThreshold ? 'text-amber-400' : 'text-white'}`}>
+              {formatElapsed(elapsedSeconds)}
+            </p>
+          </div>
           <button
-            onClick={handleFinish}
+            onClick={() => setShowFinishConfirm(true)}
             disabled={exercises.length === 0 || saving}
             className="min-h-11 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-all active:bg-green-700 disabled:opacity-40"
           >
@@ -215,6 +257,73 @@ export const ActiveWorkout = ({ uid, onWorkoutSaved }: ActiveWorkoutProps) => {
                 className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-semibold text-white transition-all active:bg-red-700"
               >
                 Discard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Finish Confirmation */}
+      {showFinishConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowFinishConfirm(false)}
+          />
+          <div className="relative mx-4 w-full max-w-sm rounded-2xl bg-slate-900 p-5 text-center">
+            <h3 className="mb-2 text-lg font-bold text-white">
+              Finish Workout?
+            </h3>
+            <p className="mb-5 text-sm text-slate-400">
+              {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} &middot;{' '}
+              {exercises.reduce(
+                (sum, ex) => sum + ex.sets.filter((s) => s.completed).length,
+                0,
+              )}{' '}
+              sets completed &middot; {formatElapsed(elapsedSeconds)}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFinishConfirm(false)}
+                className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-slate-800 text-sm font-semibold text-slate-300 transition-all active:bg-slate-700"
+              >
+                Keep Going
+              </button>
+              <button
+                onClick={() => {
+                  setShowFinishConfirm(false);
+                  handleFinish();
+                }}
+                className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-green-600 text-sm font-semibold text-white transition-all active:bg-green-700"
+              >
+                Finish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Long Workout Warning */}
+      {showLongWorkoutWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowLongWorkoutWarning(false)}
+          />
+          <div className="relative mx-4 w-full max-w-sm rounded-2xl bg-slate-900 p-5 text-center">
+            <h3 className="mb-2 text-lg font-bold text-amber-400">
+              Still Working Out?
+            </h3>
+            <p className="mb-5 text-sm text-slate-400">
+              You&apos;ve been at it for over 3 hours. Don&apos;t forget to finish
+              your workout when you&apos;re done!
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLongWorkoutWarning(false)}
+                className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-slate-800 text-sm font-semibold text-slate-300 transition-all active:bg-slate-700"
+              >
+                Got It
               </button>
             </div>
           </div>

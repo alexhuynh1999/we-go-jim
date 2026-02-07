@@ -1,0 +1,14 @@
+# Features to Add
+- The top header needs spacing. Remember that the primary platform is on mobile, so keep in mind things like iPhone notches, cameras, etc.
+- Add a timer from when a workout is started to when it finishes. Add some guardrail to prevent super long workouts.
+    - In the history section, add a short tag (like the body part tag in exercises) for time like :stopwatch_icon: 1h 30m
+- Disable the ability to zoom on the app
+- When adding a new set to an exercise, the next exercise should autofill/dimly suggest the same weight/reps as the previous set.
+    - Plan it out so we can later implement an algorithm for the next weight/reps
+- Move the rest timer to the middle of the screen
+- Have the rest timer play a sound (i will upload it, but tell me where to place the audio file)
+- Point me towards where I need to place the thumbnail/app icon for this
+- API results should capitalize every letter in a new word. Try your best to clean the data (remove punctuation, but keep dashes)
+- When a user hits "Finish" on a workout, add a confirmation window.
+- When a user clicks a recent workout, it should go straight to the workout, not to the History tab
+- add a small version indicator in the header or footer, somewhere discrete but visible
