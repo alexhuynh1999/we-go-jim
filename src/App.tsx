@@ -85,7 +85,7 @@ const AppRoutes = () => {
 
   return (
     <AuthGuard user={user} loading={loading} error={error} onLogin={login}>
-      <div className="flex min-h-dvh flex-col bg-slate-950 pt-[env(safe-area-inset-top)]">
+      <div className="flex min-h-dvh flex-col bg-slate-950 pt-[env(safe-area-inset-top,0px)]">
         <Routes>
           <Route
             path="/"

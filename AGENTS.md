@@ -61,6 +61,7 @@ we-go-jim/
 - Use `const` by default. Only use `let` when reassignment is needed. Never use `var`.
 - Prefer named exports over default exports.
 - Keep files focused and under 200 lines when possible.
+- **Versioning**: Update the `version` field in `package.json` using [semantic versioning](https://semver.org/) when making changes. Bump the **patch** version for bug fixes, **minor** for new features or non-breaking enhancements, and **major** for breaking changes.
 
 ### React
 

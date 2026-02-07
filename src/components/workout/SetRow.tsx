@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { WorkoutSet } from '@/types/workout';
 
 interface SetRowProps {
@@ -19,6 +20,42 @@ export const SetRow = ({
   onRemove,
   previousSet,
 }: SetRowProps) => {
+  // Local string state so we can distinguish "empty/initial" from "user typed 0"
+  const [localWeight, setLocalWeight] = useState(set.weight > 0 ? String(set.weight) : '');
+  const [localReps, setLocalReps] = useState(set.reps > 0 ? String(set.reps) : '');
+
+  const blockInvalidKeys = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+      e.preventDefault();
+    }
+  };
+
+  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (raw === '') {
+      setLocalWeight('');
+      onUpdate({ weight: 0 });
+      return;
+    }
+    const num = parseFloat(raw);
+    if (isNaN(num) || num < 0) return;
+    setLocalWeight(raw);
+    onUpdate({ weight: num });
+  };
+
+  const handleRepsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (raw === '') {
+      setLocalReps('');
+      onUpdate({ reps: 0 });
+      return;
+    }
+    const num = parseInt(raw, 10);
+    if (isNaN(num) || num < 0) return;
+    setLocalReps(raw);
+    onUpdate({ reps: num });
+  };
+
   return (
     <div
       className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-colors ${
@@ -36,11 +73,11 @@ export const SetRow = ({
           <input
             type="number"
             inputMode="decimal"
-            value={set.weight || ''}
+            min="0"
+            value={localWeight}
             placeholder={previousSet ? String(previousSet.weight) : '0'}
-            onChange={(e) =>
-              onUpdate({ weight: parseFloat(e.target.value) || 0 })
-            }
+            onKeyDown={blockInvalidKeys}
+            onChange={handleWeightChange}
             className={`w-full rounded-lg border bg-slate-900 px-3 py-2 text-center text-sm font-medium text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none ${
               set.completed ? 'border-green-500/30' : 'border-slate-700'
             }`}
@@ -61,11 +98,11 @@ export const SetRow = ({
         <input
           type="number"
           inputMode="numeric"
-          value={set.reps || ''}
+          min="0"
+          value={localReps}
           placeholder={previousSet ? String(previousSet.reps) : '0'}
-          onChange={(e) =>
-            onUpdate({ reps: parseInt(e.target.value, 10) || 0 })
-          }
+          onKeyDown={blockInvalidKeys}
+          onChange={handleRepsChange}
           className={`w-full rounded-lg border bg-slate-900 px-3 py-2 text-center text-sm font-medium text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none ${
             set.completed ? 'border-green-500/30' : 'border-slate-700'
           }`}
