@@ -56,6 +56,21 @@ export const SetRow = ({
     onUpdate({ reps: num });
   };
 
+  const handleToggleComplete = () => {
+    // When completing a set, auto-fill empty fields with placeholder values
+    if (!set.completed && previousSet) {
+      if (localWeight === '' && !isBodyweight && previousSet.weight > 0) {
+        setLocalWeight(String(previousSet.weight));
+        onUpdate({ weight: previousSet.weight });
+      }
+      if (localReps === '' && previousSet.reps > 0) {
+        setLocalReps(String(previousSet.reps));
+        onUpdate({ reps: previousSet.reps });
+      }
+    }
+    onToggleComplete();
+  };
+
   return (
     <div
       className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-colors ${
@@ -63,7 +78,9 @@ export const SetRow = ({
       }`}
     >
       {/* Set Number */}
-      <span className="w-6 text-center text-sm font-medium text-slate-500">
+      <span className={`w-6 text-center text-sm font-medium transition-colors ${
+        set.completed ? 'text-white' : 'text-slate-500'
+      }`}>
         {setIndex + 1}
       </span>
 
@@ -78,11 +95,15 @@ export const SetRow = ({
             placeholder={previousSet ? String(previousSet.weight) : '0'}
             onKeyDown={blockInvalidKeys}
             onChange={handleWeightChange}
-            className={`w-full rounded-lg border bg-slate-900 px-3 py-2 text-center text-sm font-medium text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none ${
-              set.completed ? 'border-green-500/30' : 'border-slate-700'
+            className={`w-full rounded-lg border px-3 py-2 text-center text-sm font-medium placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none transition-colors ${
+              set.completed
+                ? 'border-green-500/30 bg-green-500/5 text-white'
+                : 'border-slate-700 bg-slate-900 text-slate-400'
             }`}
           />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-600">
+          <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs transition-colors ${
+            set.completed ? 'text-slate-400' : 'text-slate-600'
+          }`}>
             lbs
           </span>
         </div>
@@ -90,7 +111,9 @@ export const SetRow = ({
 
       {/* Separator */}
       {!isBodyweight && (
-        <span className="text-sm text-slate-600">x</span>
+        <span className={`text-sm transition-colors ${
+          set.completed ? 'text-white' : 'text-slate-600'
+        }`}>x</span>
       )}
 
       {/* Reps Input */}
@@ -103,18 +126,22 @@ export const SetRow = ({
           placeholder={previousSet ? String(previousSet.reps) : '0'}
           onKeyDown={blockInvalidKeys}
           onChange={handleRepsChange}
-          className={`w-full rounded-lg border bg-slate-900 px-3 py-2 text-center text-sm font-medium text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none ${
-            set.completed ? 'border-green-500/30' : 'border-slate-700'
+          className={`w-full rounded-lg border px-3 py-2 text-center text-sm font-medium placeholder:text-slate-600 focus:outline-none transition-colors ${
+            set.completed
+              ? 'border-green-500/30 bg-green-500/5 text-white'
+              : 'border-slate-700 bg-slate-900 text-slate-400'
           }`}
         />
-        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-600">
+        <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs transition-colors ${
+          set.completed ? 'text-slate-400' : 'text-slate-600'
+        }`}>
           reps
         </span>
       </div>
 
       {/* Complete Toggle */}
       <button
-        onClick={onToggleComplete}
+        onClick={handleToggleComplete}
         className={`flex min-h-9 min-w-9 items-center justify-center rounded-lg transition-all ${
           set.completed
             ? 'bg-green-500 text-white'
